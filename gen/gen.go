@@ -38,7 +38,7 @@ func GenApi(routerMap map[string][]apiparser.Router,  projectName, destPath stri
 
 	for service, routerArr := range routerMap {
 		filename := apiDir+"/"+service+".go"
-		f, err := os.OpenFile(filename, os.O_CREATE| os.O_APPEND,0600)
+		f, err := os.OpenFile(filename, os.O_CREATE| os.O_APPEND | os.O_RDWR,os.ModePerm)
 		defer f.Close()
 		if err !=nil {
 			return err
@@ -89,7 +89,7 @@ func GenService(routerMap map[string][]apiparser.Router, projectName, destPath s
 			break
 		}
 		filename := servicePath+"/"+serviceName+".go"
-		f, err := os.OpenFile(filename, os.O_CREATE| os.O_APPEND,0600)
+		f, err := os.OpenFile(filename, os.O_CREATE| os.O_APPEND |os.O_RDWR,os.ModePerm)
 		defer f.Close()
 		if err !=nil {
 			return err
