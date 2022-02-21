@@ -45,7 +45,7 @@ func(m *Parser) Parse(filename string) error {
 
 func (m *Parser) fillType(ctx string)  {
 	typeList := map[string]string{}
-	reg2 := regexp.MustCompile("type (\\w*) .* {\n(.*?\"`\n)*}")
+	reg2 := regexp.MustCompile("type (\\w*) .* {\\n*([\\w\\s_:`\"]*\\n)*}")
 	result2 := reg2.FindAllStringSubmatch(ctx, -1)
 	for _, v := range result2 {
 		typeList[v[1]] = v[0]
@@ -54,11 +54,13 @@ func (m *Parser) fillType(ctx string)  {
 }
 
 func (m *Parser)  fillService(ctx string) (err error) {
-	result2 := getRegexp("service (.*) {\\n([\\w@\\s/()]*\\n)*}", ctx)
+	result2 := getRegexp("service (.*) {\\n*([\\w@\\s/();]*\\n)*}", ctx)
 	routerMap := map[string][]Router{}
 	for _, v := range result2 {
 		var arr []string
-		arr = strings.Split(v[2], "\n\n")
+		arr = strings.Split(v[2], ";")
+		//去除最后一个空元素
+		arr = arr[:len(arr)-1]
 		for _, v1 := range arr {
 			lineArr := strings.Split(v1, "\n")
 			for k, line := range lineArr {
@@ -89,7 +91,8 @@ func (m *Parser)  fillService(ctx string) (err error) {
 			router.Method = result[0][1]
 			router.Action = result[0][2]
 			router.Request = strings.TrimRight(strings.TrimLeft(result[0][3], "("), ")")
-			router.Response =strings.TrimRight(strings.TrimLeft(result[0][4], "("), ")")
+			router.Response = strings.TrimRight(strings.TrimLeft(strings.ReplaceAll(result[0][4], "\r", ""), "("), ")")
+
 			//检测request以及response是否已定义
 			if _, ok := m.Types[router.Request]; !ok {
 				err = errors.New(router.Request+ "未定义")

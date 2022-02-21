@@ -8,6 +8,7 @@ import (
 	"github.com/logrusorgru/aurora"
 	"github.com/urfave/cli"
 	"github.com/zjswh/quickTool/apiparser"
+	"github.com/zjswh/quickTool/apiparser/sql/parser"
 	"github.com/zjswh/quickTool/gen"
 	"io/ioutil"
 	"net/http"
@@ -150,7 +151,7 @@ func model(c *cli.Context) {
 
 	bt, _ := os.ReadFile(sqlAddr)
 	arr := strings.Split(string(bt), ";")
-
+	arr = arr[:len(arr)-1]
 	funcTemplateByte, err  := ioutil.ReadFile(getCurrentPath() + "model.tpl")
 	funcTemplateStr := string(funcTemplateByte)
 	if err != nil {
@@ -165,18 +166,15 @@ func model(c *cli.Context) {
 			dir = strings.TrimRight(dir, "/")
 			filename := dir + "/" + Case2Camel(sqlName) + ".go"
 			if !checkFileIsExist(filename) { //如果文件存在
-				var result struct {
-					Data  string `json:"data"`
-					Error string `json:"error"`
-				}
-				res, _ := Request("https://www.printlove.cn/api/sql2gorm", map[string]interface{}{
-					"ddl": v + ";",
-				}, map[string]interface{}{}, "POST", "form")
-				json.Unmarshal(res, &result)
-				structName := regexpData(result.Data, "type (.*?) struct")
+				res, _ := parser.ParseSqlFormat(v + ";",
+					parser.WithGormType(),
+					parser.WithJsonTag(),
+				)
+				sqlData := string(res)
+				structName := regexpData(sqlData, "type (.*?) struct")
 				funcTemplateStrCopy := funcTemplateStr
 				funcTemplateStrCopy = strings.Replace(funcTemplateStrCopy, "Template", Case2Camel(structName), -1)
-				arr1 := strings.Split(result.Data, "\n")
+				arr1 := strings.Split(sqlData, "\n")
 				importIndex := 2
 				hasImport := false
 				hasTableNameFunc := false
@@ -201,8 +199,8 @@ func model(c *cli.Context) {
 					insertArr = []string{fmt.Sprintf("func (m *%s) TableName() string {", Case2Camel(sqlName)), fmt.Sprintf("\treturn \"%s\"", sqlName), "}", ""}
 					arr1 = append(arr1, insertArr...)
 				}
-				result.Data = strings.Join(arr1, "\n")
-				err := ioutil.WriteFile(filename, []byte(result.Data+"\n"+funcTemplateStrCopy), 0644)
+				sqlData = strings.Join(arr1, "\n")
+				err := ioutil.WriteFile(filename, []byte(sqlData+"\n"+funcTemplateStrCopy), 0644)
 				if err != nil {
 					fmt.Println("model文件生成失败，原因:" + err.Error())
 				}
