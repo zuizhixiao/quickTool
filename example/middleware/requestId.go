@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/zjswh/go-tool/utils"
+	"github.com/google/uuid"
 )
 
 func RequestId() gin.HandlerFunc  {
@@ -10,10 +10,15 @@ func RequestId() gin.HandlerFunc  {
 		headerName := "X-Request-Id"
 		requestUid := c.Request.Header.Get(headerName)
 		if requestUid == "" {
-			requestUid = utils.GenUUID()
+			requestUid = genUUID()
 		}
 		c.Set(headerName, requestUid)
 		c.Writer.Header().Set(headerName, requestUid)
 		c.Next()
 	}
+}
+
+func genUUID() string {
+	u, _ := uuid.NewRandom()
+	return u.String()
 }
