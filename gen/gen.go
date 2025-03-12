@@ -2,11 +2,12 @@ package gen
 
 import (
 	"fmt"
-	"github.com/zjswh/quickTool/apiparser"
 	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/zuizhixiao/quickTool/apiparser"
 )
 
 func getOldAPiFuncList(apiOldContent string) map[string]int {
@@ -29,7 +30,7 @@ func getOldServiceFuncList(apiServiceContent string) map[string]int {
 	return funcList
 }
 
-func GenApi(routerMap map[string][]apiparser.Router,  projectName, destPath string) error {
+func GenApi(routerMap map[string][]apiparser.Router, projectName, destPath string) error {
 	apiDir := destPath + "/api/v1"
 	err := MkdirIfNotExist(apiDir)
 	if err != nil {
@@ -37,13 +38,13 @@ func GenApi(routerMap map[string][]apiparser.Router,  projectName, destPath stri
 	}
 
 	for service, routerArr := range routerMap {
-		filename := apiDir+"/"+service+".go"
-		f, err := os.OpenFile(filename, os.O_CREATE| os.O_APPEND | os.O_RDWR,os.ModePerm)
+		filename := apiDir + "/" + service + ".go"
+		f, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm)
 		defer f.Close()
-		if err !=nil {
+		if err != nil {
 			return err
 		}
-		apiOldContentByte, _ := ioutil.ReadFile(filename)
+		apiOldContentByte, _ := os.ReadFile(filename)
 		apiOldContent := string(apiOldContentByte)
 		oldApiFuncList := getOldAPiFuncList(apiOldContent)
 
@@ -88,10 +89,10 @@ func GenService(routerMap map[string][]apiparser.Router, projectName, destPath s
 		if err != nil {
 			break
 		}
-		filename := servicePath+"/"+serviceName+".go"
-		f, err := os.OpenFile(filename, os.O_CREATE| os.O_APPEND |os.O_RDWR,os.ModePerm)
+		filename := servicePath + "/" + serviceName + ".go"
+		f, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm)
 		defer f.Close()
-		if err !=nil {
+		if err != nil {
 			return err
 		}
 		serviceOldContentByte, _ := ioutil.ReadFile(filename)
@@ -124,7 +125,7 @@ func GenService(routerMap map[string][]apiparser.Router, projectName, destPath s
 	return nil
 }
 
-func GenRoutes(routerMap map[string][]apiparser.Router,  projectName, destPath string) error {
+func GenRoutes(routerMap map[string][]apiparser.Router, projectName, destPath string) error {
 	//创建文件夹
 	routerDir := destPath + "/router"
 	err := MkdirIfNotExist(routerDir)
@@ -139,7 +140,7 @@ func GenRoutes(routerMap map[string][]apiparser.Router,  projectName, destPath s
 			arrMap[v.Middle] = append(arrMap[v.Middle], v)
 		}
 		for middle, groupRouterArr := range arrMap {
-			router := fmt.Sprintf("\t%sRouter := Router.Group(\"\")", service + middle)
+			router := fmt.Sprintf("\t%sRouter := Router.Group(\"\")", service+middle)
 			if middle != "" {
 				router += fmt.Sprintf(".\r\tUse(middleware.%s())", middle)
 				middlewareMap[middle] = 1
@@ -147,7 +148,7 @@ func GenRoutes(routerMap map[string][]apiparser.Router,  projectName, destPath s
 			}
 			router += "\n\t{\n"
 			for _, v := range groupRouterArr {
-				router += fmt.Sprintf("\t\t%sRouter.%s(\"%s\", v1.%s)\n", service + middle, strings.ToUpper(v.Method), v.Action, ucFirst(v.Handler))
+				router += fmt.Sprintf("\t\t%sRouter.%s(\"%s\", v1.%s)\n", service+middle, strings.ToUpper(v.Method), v.Action, ucFirst(v.Handler))
 			}
 			router += "\t}\n\n"
 			routerContent += router
@@ -156,7 +157,7 @@ func GenRoutes(routerMap map[string][]apiparser.Router,  projectName, destPath s
 	middlewareImport := ""
 	//判断是否使用了中间件
 	if useMiddleImport > 0 {
-		middlewareImport = "\""+projectName+"/middleware\""
+		middlewareImport = "\"" + projectName + "/middleware\""
 		//生成中间件
 		GenMiddleware(middlewareMap, destPath)
 	}
@@ -216,4 +217,3 @@ func MkdirIfNotExist(dir string) error {
 
 	return nil
 }
-

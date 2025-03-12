@@ -1,4 +1,4 @@
-module github.com/zjswh/quickTool
+module github.com/zuizhixiao/quickTool
 
 go 1.16
 

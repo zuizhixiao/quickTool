@@ -5,11 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/logrusorgru/aurora"
-	"github.com/urfave/cli"
-	"github.com/zjswh/quickTool/apiparser"
-	"github.com/zjswh/quickTool/apiparser/sql/parser"
-	"github.com/zjswh/quickTool/gen"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -18,44 +13,50 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+
+	"github.com/logrusorgru/aurora"
+	"github.com/urfave/cli"
+	"github.com/zuizhixiao/quickTool/apiparser"
+	"github.com/zuizhixiao/quickTool/apiparser/sql/parser"
+	"github.com/zuizhixiao/quickTool/gen"
 )
 
 var (
-	commands     = []cli.Command{
+	commands = []cli.Command{
 		{
-			Name:   "template",
-			Usage:  "generate api related files",
+			Name:  "template",
+			Usage: "generate api related files",
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:  "api",
-					Usage: "the api file",
+					Name:     "api",
+					Usage:    "the api file",
 					Required: true,
 				},
 				cli.StringFlag{
-					Name:  "name",
-					Usage: "the project name",
+					Name:     "name",
+					Usage:    "the project name",
 					Required: true,
 				},
 				cli.StringFlag{
-					Name:  "dir",
-					Usage: "the dest path",
+					Name:     "dir",
+					Usage:    "the dest path",
 					Required: true,
 				},
 			},
 			Action: template,
 		},
 		{
-			Name:   "model",
-			Usage:  "generate mysql model files",
+			Name:  "model",
+			Usage: "generate mysql model files",
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:  "sql",
-					Usage: "the sql file",
+					Name:     "sql",
+					Usage:    "the sql file",
 					Required: true,
 				},
 				cli.StringFlag{
-					Name:  "dir",
-					Usage: "the dest path",
+					Name:     "dir",
+					Usage:    "the dest path",
 					Required: true,
 				},
 			},
@@ -91,7 +92,7 @@ func template(c *cli.Context) {
 
 	//当go.mod文件存在时即代表基础文件已存在 无需重复加载
 	if _, err := os.Stat(targetAddr + "/go.mod"); err != nil {
-		CopyDir(getCurrentPath() +  "example", targetAddr, name)
+		CopyDir(getCurrentPath()+"example", targetAddr, name)
 	}
 
 	err := ApiCommand(apiPath, name, targetAddr)
@@ -101,7 +102,7 @@ func template(c *cli.Context) {
 	}
 }
 
-func ApiCommand (apiFile, projectName, destPath string) error {
+func ApiCommand(apiFile, projectName, destPath string) error {
 	parser := apiparser.NewParser()
 	err := parser.Parse(apiFile)
 	if err != nil {
@@ -152,7 +153,7 @@ func model(c *cli.Context) {
 	bt, _ := os.ReadFile(sqlAddr)
 	arr := strings.Split(string(bt), ";")
 	arr = arr[:len(arr)-1]
-	funcTemplateByte, err  := ioutil.ReadFile(getCurrentPath() + "model.tpl")
+	funcTemplateByte, err := ioutil.ReadFile(getCurrentPath() + "model.tpl")
 	funcTemplateStr := string(funcTemplateByte)
 	if err != nil {
 		fmt.Println(err)
@@ -166,7 +167,7 @@ func model(c *cli.Context) {
 			dir = strings.TrimRight(dir, "/")
 			filename := dir + "/" + Case2Camel(sqlName) + ".go"
 			if !checkFileIsExist(filename) { //如果文件存在
-				res, _ := parser.ParseSqlFormat(v + ";",
+				res, _ := parser.ParseSqlFormat(v+";",
 					parser.WithGormType(),
 					parser.WithJsonTag(),
 				)
@@ -325,16 +326,16 @@ func CopyDir(srcPath, destPath, name string) error {
 		fmt.Printf(err.Error())
 	}
 	//生成go.mod文件
-	ioutil.WriteFile(destPath + "/go.mod", []byte(fmt.Sprintf("module %s\n\ngo 1.16\n\n", name)), os.ModePerm)
+	ioutil.WriteFile(destPath+"/go.mod", []byte(fmt.Sprintf("module %s\n\ngo 1.16\n\n", name)), os.ModePerm)
 
 	//生成dockerfile文件
 	dockerfileTemplate := gen.DockerfileTemplate
 	dockerfileTemplate = strings.ReplaceAll(dockerfileTemplate, "TEMPLATE", name)
-	ioutil.WriteFile(destPath + "/Dockerfile", []byte(dockerfileTemplate), os.ModePerm)
+	ioutil.WriteFile(destPath+"/Dockerfile", []byte(dockerfileTemplate), os.ModePerm)
 	return err
 }
 
-//生成目录并拷贝文件
+// 生成目录并拷贝文件
 func copyFile(src, dest, name string) error {
 	srcFile, err := os.Open(src)
 	if err != nil {
@@ -367,7 +368,7 @@ func copyFile(src, dest, name string) error {
 	return ioutil.WriteFile(dest, []byte(fileContent), 0644)
 }
 
-//检测文件夹路径时候存在
+// 检测文件夹路径时候存在
 func pathExists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
