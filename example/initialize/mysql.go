@@ -3,7 +3,7 @@ package initialize
 import (
 	"TEMPLATE/config"
 	"fmt"
-	"github.com/zjswh/quickTool/example/middleware"
+	"TEMPLATE/middleware"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

@@ -66,6 +66,7 @@ type JWT struct {
 type Log struct {
 	Path string `mapstructure:"path" json:"path" yaml:"path"`
 	Name string `mapstructure:"name" json:"name" yaml:"name"`
+	Day  int    `mapstructure:"day" json:"day" yaml:"day"`
 }
 
 type Email struct {
